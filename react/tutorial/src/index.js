@@ -4,7 +4,7 @@ import './index.css';
 
 function Square(props) {
   return (
-    <button className="square" onClick={props.onClick}>
+    <button className={props.squareClass} onClick={props.onClick}>
       {props.value}
     </button>
   );
@@ -15,19 +15,21 @@ class Board extends React.Component {
     super(props);
     this.state = {
       squares: Array(9).fill(null),
-      count: 0
+      count: 0,
+      lines: []
     };
   }
 
-  checkSquares(i) {
+  continued(i) {
     if (this.state.squares[i]) {
       alert('Can not click the same cell');
       return false;
     }
 
-    const winner = calcWinner(this.state.squares);
+    const { winner, lines } = calcWinner(this.state.squares);
     if (winner) {
       alert(`${winner} Win!!!!`);
+      this.setState({ lines });
       return false;
     }
 
@@ -35,7 +37,7 @@ class Board extends React.Component {
   }
 
   handleClick(i) {
-    if (!this.checkSquares(i)) {
+    if (!this.continued(i)) {
       return;
     }
 
@@ -44,21 +46,27 @@ class Board extends React.Component {
     this.setState({ squares, count: this.state.count + 1 });
   }
 
-  renderSquare(row, col) {
-    const index = row * 3 + col;
+  renderSquare(i) {
+    let squareClass = 'square';
+
+    if (this.state.lines.includes(i)) {
+      squareClass += ' winner';
+    }
+
     return (
       <Square
-        value={this.state.squares[index]}
-        onClick={() => this.handleClick(index)}
-        key={`${row}${col}`}
+        value={this.state.squares[i]}
+        squareClass={squareClass}
+        onClick={() => this.handleClick(i)}
+        key={`square_${i}`}
       />
     );
   }
 
   renderBoardRow() {
     return [...Array(3).keys()].map((i) => (
-      <div key={i.toString()} className="board-row">
-        {[...Array(3).keys()].map((j) => this.renderSquare(i, j))}
+      <div key={`board_row_${i}`} className="board-row">
+        {[...Array(3).keys()].map((j) => this.renderSquare(i * 3 + j))}
       </div>
     ));
   }
@@ -106,12 +114,16 @@ function calcWinner(squares) {
     [0, 4, 8],
     [2, 4, 6]
   ];
+
   for (let i = 0; i < lines.length; i++) {
     const [x, y, z] = lines[i];
     if (
       `${squares[x]}${squares[y]}${squares[z]}` === String(squares[x]).repeat(3)
     ) {
-      return squares[x];
+      return {
+        winner: squares[x],
+        lines: lines[i]
+      };
     }
   }
   return null;
