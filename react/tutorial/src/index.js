@@ -16,20 +16,26 @@ class Board extends React.Component {
     this.state = {
       squares: Array(9).fill(null),
       count: 0,
-      lines: []
+      line: []
     };
   }
 
   continued(i) {
-    if (this.state.squares[i]) {
-      alert('Can not click the same cell');
+    const { winner, line } = calcWinner(this.state.squares);
+    console.log(winner, line);
+    if (winner) {
+      alert(`${winner} Win!!!!`);
+      this.setState({ line });
       return false;
     }
 
-    const { winner, lines } = calcWinner(this.state.squares);
-    if (winner) {
-      alert(`${winner} Win!!!!`);
-      this.setState({ lines });
+    if (this.state.count === 9) {
+      alert('This game is a draw...');
+      return false;
+    }
+
+    if (this.state.squares[i]) {
+      alert('Can not click the same cell');
       return false;
     }
 
@@ -47,11 +53,9 @@ class Board extends React.Component {
   }
 
   renderSquare(i) {
-    let squareClass = 'square';
-
-    if (this.state.lines.includes(i)) {
-      squareClass += ' winner';
-    }
+    const squareClass = this.state.line.includes(i)
+      ? 'square winner'
+      : 'square';
 
     return (
       <Square
@@ -114,19 +118,21 @@ function calcWinner(squares) {
     [0, 4, 8],
     [2, 4, 6]
   ];
+  const result = { winner: null, line: null };
 
   for (let i = 0; i < lines.length; i++) {
     const [x, y, z] = lines[i];
+
     if (
+      squares[x] &&
       `${squares[x]}${squares[y]}${squares[z]}` === String(squares[x]).repeat(3)
     ) {
-      return {
-        winner: squares[x],
-        lines: lines[i]
-      };
+      result.winner = squares[x];
+      result.line = lines[i];
+      break;
     }
   }
-  return null;
+  return result;
 }
 
 // ========================================
